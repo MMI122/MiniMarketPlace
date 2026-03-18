@@ -8,12 +8,13 @@ import com.example.minimarketplaceprototype.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class DataInitializer {
 
     @Bean
-    public CommandLineRunner initData(RoleRepository roleRepository, UserRepository userRepository) {
+    public CommandLineRunner initData(RoleRepository roleRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
             // 1. Seed Roles
             if (roleRepository.count() == 0) {
@@ -27,9 +28,8 @@ public class DataInitializer {
                 Role adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN).orElseThrow();
                 User admin = new User();
                 admin.setUsername("admin");
-                // Note: We are putting a plain text password here for just a moment.
-                // We will add BCrypt hashing to it in the very next branch!
-                admin.setPassword("admin123");
+                // The password is now safely encrypted using BCrypt!
+                admin.setPassword(passwordEncoder.encode("admin123"));
                 admin.setRole(adminRole);
                 userRepository.save(admin);
             }
