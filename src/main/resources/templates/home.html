@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::section})}">
+<section>
+  <div class="row text-center mt-5">
+    <div class="col-12">
+      <h1 class="display-4">Welcome to Mini Marketplace!</h1>
+      <p class="lead">You have successfully logged in.</p>
+      <hr class="my-4">
+
+      <h4 class="mb-3">Hello, <span th:text="${#authentication.name}">User</span>!</h4>
+      <p>Your assigned role is: <strong th:text="${#authentication.authorities[0]}">ROLE</strong></p>
+    </div>
+  </div>
+</section>
+</html>
