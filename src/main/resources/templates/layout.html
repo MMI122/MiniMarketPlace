@@ -19,6 +19,9 @@
                 <li class="nav-item" th:if="${#authorization.expression('hasRole(''ROLE_BUYER'')')}">
                     <a class="nav-link text-white" href="/orders">My Orders</a>
                 </li>
+                <li class="nav-item" th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
+                    <a class="nav-link text-warning fw-bold" href="/admin/dashboard">⚙️ Admin Dashboard</a>
+                </li>
             </ul>
         </div>
 

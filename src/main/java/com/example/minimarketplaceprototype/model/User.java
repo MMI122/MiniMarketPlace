@@ -28,4 +28,10 @@ public class User {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean isBanned = false;
+
+    @Column(length = 1000)
+    private String adminMessage;
 }

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::section})}">
+<section>
+  <div class="mb-4">
+    <h2 class="text-danger">⚙️ System Administration</h2>
+    <p class="text-muted">Overview of all marketplace activity.</p>
+
+    <div th:if="${param.msgSuccess}" class="alert alert-success mt-2">
+      Message sent to user successfully!
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-7 mb-4">
+      <div class="card shadow-sm border-danger border-opacity-25">
+        <div class="card-header bg-danger text-white fw-bold">All Registered Users</div>
+        <div class="card-body p-0">
+          <table class="table table-striped mb-0">
+            <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Message</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="user : ${users}">
+              <td th:text="${user.id}">1</td>
+              <td class="fw-bold" th:text="${user.username}">User</td>
+              <td><span class="badge bg-secondary" th:text="${user.role.name}">ROLE</span></td>
+
+              <td>
+                <form th:if="${user.username != 'admin'}" th:action="@{/admin/users/{id}/toggle-ban(id=${user.id})}" method="post">
+                  <button type="submit" class="btn btn-sm"
+                          th:classappend="${user.banned} ? 'btn-success' : 'btn-danger'"
+                          th:text="${user.banned} ? 'Unban' : 'Ban'"></button>
+                </form>
+              </td>
+
+              <td>
+                <button th:if="${user.username != 'admin'}" type="button" class="btn btn-sm btn-info text-white" data-bs-toggle="modal" th:data-bs-target="'#messageModal' + ${user.id}">
+                  💬 Msg
+                </button>
+
+                <div class="modal fade" th:id="'messageModal' + ${user.id}" tabindex="-1">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <form th:action="@{/admin/users/{id}/message(id=${user.id})}" method="post">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Message to <span th:text="${user.username}"></span></h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                          <textarea name="message" class="form-control" rows="3" placeholder="Type your warning/message here..." required></textarea>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="submit" class="btn btn-primary">Send Message</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5 mb-4">
+      <div class="card shadow-sm border-primary border-opacity-25">
+        <div class="card-header bg-primary text-white fw-bold">All Marketplace Products</div>
+        <div class="card-body p-0">
+          <table class="table table-striped mb-0">
+            <thead>
+            <tr>
+              <th>Product Name</th>
+              <th>Price</th>
+              <th>Seller</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="product : ${products}">
+              <td th:text="${product.name}">Product</td>
+              <td class="text-success" th:text="'$' + ${product.price}">$0.00</td>
+              <td th:text="${product.seller.username}">Seller</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(products)}">
+              <td colspan="3" class="text-center text-muted">No products listed yet.</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</html>

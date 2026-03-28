@@ -6,4 +6,5 @@ import java.util.List;
 public interface OrderService {
     void placeOrder(Long productId, Integer quantity, String buyerUsername);
     List<Order> getOrdersByBuyer(String username);
+    List<Order> getOrdersBySeller(String username);
 }
