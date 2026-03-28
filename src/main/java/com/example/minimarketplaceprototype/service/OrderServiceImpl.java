@@ -50,4 +50,11 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new RuntimeException("Buyer not found"));
         return orderRepository.findByBuyerId(buyer.getId());
     }
+
+    @Override
+    public List<Order> getOrdersBySeller(String username) {
+        User seller = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Seller not found"));
+        return orderRepository.findByProductSellerId(seller.getId());
+    }
 }

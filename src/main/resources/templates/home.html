@@ -1,15 +1,135 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::section})}">
 <section>
-  <div class="row text-center mt-5">
-    <div class="col-12">
-      <h1 class="display-4">Welcome to Mini Marketplace!</h1>
-      <p class="lead">You have successfully logged in.</p>
-      <hr class="my-4">
 
-      <h4 class="mb-3">Hello, <span th:text="${#authentication.name}">User</span>!</h4>
-      <p>Your assigned role is: <strong th:text="${#authentication.authorities[0]}">ROLE</strong></p>
+  <div class="p-5 mb-5 bg-primary text-white rounded-4 shadow-lg text-center bg-gradient">
+    <div class="container-fluid py-3">
+      <h1 class="display-4 fw-bolder mb-3">Welcome to Mini Marketplace</h1>
+      <p class="col-md-8 mx-auto fs-5 opacity-75">
+        The premier destination for buying and selling top-tier products. Join our community today and start exploring!
+      </p>
+      <div th:if="${!isLoggedIn}" class="mt-4">
+        <a href="/register" class="btn btn-light btn-lg fw-bold text-primary shadow-sm me-2">Start Selling</a>
+      </div>
     </div>
   </div>
+
+  <div th:if="${isLoggedIn}" class="row justify-content-center mb-5">
+    <div class="col-lg-10">
+      <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-body p-5 bg-light text-center">
+
+          <h3 class="fw-bolder text-dark mb-3">
+            Welcome back, <span th:text="${#authentication.name}" class="text-primary">User</span>! 👋
+          </h3>
+
+          <p class="fs-5 text-muted mb-4">
+            You are logged in as an official
+            <span th:if="${#authorization.expression('hasRole(''ROLE_BUYER'')')}" class="badge bg-info text-dark p-2 ms-1 rounded-pill">🛍️ BUYER</span>
+            <span th:if="${#authorization.expression('hasRole(''ROLE_SELLER'')')}" class="badge bg-success p-2 ms-1 rounded-pill">🏪 SELLER</span>
+            <span th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}" class="badge bg-danger p-2 ms-1 rounded-pill">⚙️ ADMIN</span>
+          </p>
+
+          <hr class="my-4 text-muted opacity-25">
+
+          <h6 class="text-muted fw-bold mb-3 text-uppercase tracking-wide">Quick Actions</h6>
+          <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a th:if="${#authorization.expression('hasRole(''ROLE_BUYER'')')}" href="/orders" class="btn btn-outline-primary px-4 py-2 fw-bold">View My Orders</a>
+            <a th:if="${#authorization.expression('hasRole(''ROLE_SELLER'')')}" href="/products/add" class="btn btn-success px-4 py-2 fw-bold shadow-sm">+ Add New Product</a>
+            <a th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}" href="/admin/dashboard" class="btn btn-danger px-4 py-2 fw-bold shadow-sm">⚙️ Admin Dashboard</a>
+          </div>
+
+          <div th:if="${#authorization.expression('hasRole(''ROLE_SELLER'')')}" class="mt-5 text-start">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="fw-bold text-dark mb-0">📊 Recent Sales & Revenue</h5>
+              <div class="d-flex gap-2">
+                <div class="badge bg-primary bg-gradient fs-6 p-2 px-3 shadow-sm rounded-pill">
+                  Total Sells: <span th:text="'$' + ${totalSales}">$0.00</span>
+                </div>
+                <div class="badge bg-success bg-gradient fs-6 p-2 px-3 shadow-sm rounded-pill">
+                  Revenue: <span th:text="'$' + ${totalRevenue}">$0.00</span>
+                </div>
+              </div>
+            </div>
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden text-start">
+              <div class="card-body p-0">
+                <table class="table table-hover mb-0 align-middle">
+                  <thead class="table-light">
+                  <tr>
+                    <th class="ps-4">Date & Time</th>
+                    <th>Product</th>
+                    <th>Buyer</th>
+                    <th>Qty</th>
+                    <th class="pe-4">Earnings</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr th:each="sale : ${sales}">
+                    <td class="ps-4 text-muted" th:text="${#temporals.format(sale.orderDate, 'MMM dd, yyyy HH:mm')}">Date</td>
+                    <td class="fw-bold text-dark" th:text="${sale.product.name}">Product</td>
+                    <td><span class="badge bg-info text-dark" th:text="${sale.buyer.username}">Buyer</span></td>
+                    <td th:text="${sale.quantity}">1</td>
+                    <td class="pe-4 text-success fw-bold" th:text="'+$' + ${sale.totalPrice}">$0.00</td>
+                  </tr>
+                  <tr th:if="${#lists.isEmpty(sales)}">
+                    <td colspan="5" class="text-center text-muted py-4">You haven't made any sales yet. Keep listing great products!</td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div th:if="${adminMessage != null}" class="alert alert-warning mt-4 shadow-sm d-flex justify-content-between align-items-center rounded-3 border-warning border-start border-4">
+        <div class="text-start">
+          <h5 class="alert-heading fw-bold mb-1 text-dark">⚠️ Important Message from Admin:</h5>
+          <p class="mb-0 text-dark" th:text="${adminMessage}"></p>
+        </div>
+        <form th:action="@{/clear-message}" method="post" class="m-0 ms-3">
+          <button type="submit" class="btn btn-sm btn-outline-danger border-0 fs-4" title="Dismiss Message">✖️</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-5">
+    <h3 class="fw-bolder mb-4 text-dark border-bottom pb-2">🔥 Featured Products</h3>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+      <div class="col" th:each="p : ${products}">
+        <div class="card h-100 shadow-sm border-0 rounded-4">
+          <div class="card-body">
+            <h5 class="card-title fw-bold" th:text="${p.name}">Product Name</h5>
+            <h6 class="card-subtitle mb-3 text-success fs-4 fw-bolder" th:text="'$' + ${p.price}">$0.00</h6>
+            <p class="card-text text-muted" th:text="${p.description}">Description</p>
+
+            <div th:if="${#authorization.expression('hasRole(''ROLE_BUYER'')')}" class="mt-4">
+              <form th:action="@{/orders/buy}" method="post" class="d-flex align-items-center">
+                <input type="hidden" name="productId" th:value="${p.id}" />
+                <input type="number" name="quantity" value="1" min="1" class="form-control form-control-sm me-2 rounded-3" style="width: 70px;" required>
+                <button type="submit" class="btn btn-sm btn-primary w-100 rounded-3 fw-bold shadow-sm">Buy Now</button>
+              </form>
+            </div>
+
+            <div th:if="${!isLoggedIn}" class="mt-4">
+              <a href="/login" class="btn btn-sm btn-outline-primary w-100 rounded-3 fw-bold">Login to Buy</a>
+            </div>
+          </div>
+          <div class="card-footer bg-white text-muted text-end border-top-0 rounded-bottom-4" style="font-size: 0.85em;">
+            Sold by: <span class="badge bg-light text-dark border" th:text="${p.seller.username}">Seller</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12" th:if="${#lists.isEmpty(products)}">
+        <div class="alert alert-light text-center border rounded-4 py-5">
+          <p class="mb-0 text-muted fs-5">No products available yet. Check back later!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </section>
 </html>

@@ -8,4 +8,7 @@ public interface UserService {
     void registerUser(UserRegistrationDto registrationDto);
     User findByUsername(String username);
     List<User> findAll();
+    void toggleBanStatus(Long userId);
+    void sendAdminMessage(Long userId, String message);
+    void clearAdminMessage(String username);
 }

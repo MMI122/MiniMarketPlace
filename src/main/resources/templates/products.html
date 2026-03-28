@@ -8,14 +8,38 @@
     </a>
   </div>
 
-  <div th:if="${param.success}" class="alert alert-success">
-    Product successfully listed!
+  <div th:if="${param.success != null}" class="alert alert-success">
+    <span th:if="${param.success[0] == 'updated'}">Product successfully updated!</span>
+    <span th:if="${param.success[0] == 'deleted'}">Product successfully deleted!</span>
+    <span th:if="${param.success[0] == ''}">Product successfully listed!</span>
+  </div>
+
+  <div th:if="${param.error != null and param.error[0] == 'unauthorized'}" class="alert alert-danger">
+    Unauthorized: You do not have permission to manage that product.
   </div>
 
   <div class="row row-cols-1 row-cols-md-3 g-4">
     <div class="col" th:each="p : ${products}">
-      <div class="card h-100 shadow-sm border-0">
-        <div class="card-body">
+
+      <div class="card h-100 shadow-sm border-0 position-relative">
+
+        <div class="position-absolute top-0 end-0 p-2" th:if="${#authentication.name == p.seller.username}">
+          <div class="dropdown">
+            <button class="btn btn-sm btn-light bg-transparent border-0 fs-5" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Manage Product">
+              &#8942;
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+              <li><a class="dropdown-item fw-bold text-primary" th:href="@{/products/edit/{id}(id=${p.id})}">✏️ Edit</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <form th:action="@{/products/delete/{id}(id=${p.id})}" method="post" onsubmit="return confirm('Are you sure you want to completely delete this product?');">
+                  <button type="submit" class="dropdown-item fw-bold text-danger">🗑️ Delete</button>
+                </form>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="card-body mt-2">
           <h5 class="card-title fw-bold" th:text="${p.name}">Product Name</h5>
           <h6 class="card-subtitle mb-3 text-success fs-5" th:text="'$' + ${p.price}">$0.00</h6>
           <p class="card-text text-muted" th:text="${p.description}">Description</p>
