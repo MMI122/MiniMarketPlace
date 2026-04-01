@@ -1,3 +1,4 @@
+// have done strategy pattern here; just documenting it so that i can see it later.
 package com.example.minimarketplaceprototype.strategy;
 
 public class BulkDiscountPricingStrategy implements PricingStrategy {
