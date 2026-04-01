@@ -6,6 +6,9 @@ import com.example.minimarketplaceprototype.model.User;
 import com.example.minimarketplaceprototype.repository.OrderRepository;
 import com.example.minimarketplaceprototype.repository.ProductRepository;
 import com.example.minimarketplaceprototype.repository.UserRepository;
+import com.example.minimarketplaceprototype.strategy.BulkDiscountPricingStrategy;
+import com.example.minimarketplaceprototype.strategy.PricingStrategy;
+import com.example.minimarketplaceprototype.strategy.RegularPricingStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -29,16 +32,33 @@ public class OrderServiceImpl implements OrderService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
+        // 👇 THE STRATEGY PATTERN IN ACTION 👇
+        PricingStrategy pricingStrategy;
+
+        // If they buy 5 or more, dynamically switch to the Bulk Discount strategy!
+        if (quantity >= 5) {
+            pricingStrategy = new BulkDiscountPricingStrategy();
+        } else {
+            pricingStrategy = new RegularPricingStrategy();
+        }
+
+        // Convert BigDecimal to double for the strategy calculation
+        double unitPrice = product.getPrice().doubleValue();
+
+        // Execute the strategy
+        double calculatedTotal = pricingStrategy.calculatePrice(unitPrice, quantity);
+
+        // Convert the final double back to BigDecimal for safe database storage
+        BigDecimal finalTotalPrice = BigDecimal.valueOf(calculatedTotal);
+        // 👆 -------------------------------- 👆
+
         // Create the new order
         Order order = new Order();
         order.setBuyer(buyer);
         order.setProduct(product);
         order.setQuantity(quantity);
         order.setOrderDate(LocalDateTime.now()); // Stamp the current date/time
-
-        // Calculate total price: price * quantity
-        BigDecimal total = product.getPrice().multiply(BigDecimal.valueOf(quantity));
-        order.setTotalPrice(total);
+        order.setTotalPrice(finalTotalPrice); // Save the strategy-calculated price
 
         // Save to database
         orderRepository.save(order);
