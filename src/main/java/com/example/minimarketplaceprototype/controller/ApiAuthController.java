@@ -1,6 +1,7 @@
 package com.example.minimarketplaceprototype.controller;
 
 // Notice the updated import here!
+// did the api endpoint here
 import com.example.minimarketplaceprototype.dto.UserRegistrationDto;
 import com.example.minimarketplaceprototype.service.UserService;
 import lombok.RequiredArgsConstructor;
