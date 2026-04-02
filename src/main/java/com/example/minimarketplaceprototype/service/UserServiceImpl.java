@@ -48,4 +48,28 @@ public class UserServiceImpl implements UserService {
     public List<User> findAll() {
         return userRepository.findAll();
     }
+
+    @Override
+    public void toggleBanStatus(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setBanned(!user.isBanned()); // Flip it: if true make false, if false make true
+        userRepository.save(user);
+    }
+
+    @Override
+    public void sendAdminMessage(Long userId, String message) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setAdminMessage(message);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void clearAdminMessage(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setAdminMessage(null); // Wipe the message
+        userRepository.save(user);  // Save the cleared state
+    }
 }
