@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import com.example.minimarketplaceprototype.factory.UserFactory;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +20,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserFactory userFactory;
 
     @Override
     public void registerUser(UserRegistrationDto registrationDto) {
@@ -27,13 +29,13 @@ public class UserServiceImpl implements UserService {
         Role role = roleRepository.findByName(roleName)
                 .orElseThrow(() -> new RuntimeException("Role not found"));
 
-        // Create the new user object
-        User user = new User();
-        user.setUsername(registrationDto.getUsername());
-
         // Encrypt the password before saving!
-        user.setPassword(passwordEncoder.encode(registrationDto.getPassword()));
-        user.setRole(role);
+        String encodedPassword = passwordEncoder.encode(registrationDto.getPassword());
+
+        //  THE FACTORY PATTERN IN ACTION
+        // We pass the raw materials to the factory, and it hands us back a fully built User!
+        User user = userFactory.createUser(registrationDto, role, encodedPassword);
+
 
         userRepository.save(user);
     }
