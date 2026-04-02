@@ -119,3 +119,98 @@ I was responsible for the transition from local development to production cloud 
 * **Network Resolution:** Diagnosed and resolved cross-region network errors and JDBC URL formatting issues to successfully link the application layer to the database tier over the public internet using explicit credentials and environment variables.
 
 ---
+---
+
+# 👨‍💻 Contributor: Mubin (GitHub: MMI122)
+
+## 📌 1. Overview of Responsibilities
+My primary responsibilities for the MiniMarketPlace project centered around the core commerce engine, initial project architecture, the implementation of dynamic pricing algorithms, and ensuring robust public and private API access.
+
+**Branches Owned & Merged:**
+* `feature/phase0-project-setup`
+* `feature/user-role-entities`
+* `feature/security-config`
+* `feature/api-implementation`
+* `feature/order-service-controller`
+* `feature/strategy-pattern`
+* `Mubinunittest`
+* `Mubinintegrationtest`
+
+## 🏗️ 2. Core Feature Implementation
+### Project Architecture & Setup
+* **Phase 0 Configuration:** Initialized the Spring Boot application, configured the `pom.xml` dependencies, and set up the foundational folder and package structure.
+* **Security Baseline:** Drafted the initial `SecurityConfig` to establish the stateless session management and base HTTP security filter chains.
+
+### The Commerce Engine
+* **Product Management (`ApiProductController`):** Built the complete CRUD lifecycle for the marketplace inventory, allowing sellers to safely add products and buyers to retrieve the global catalog.
+* **Order Management (`ApiOrderController`):** Engineered the transactional logic for purchasing. This includes securely fetching user context from the active Spring Security session to explicitly tie new orders to the logged-in buyer entity.
+
+## 🎨 3. Design Pattern: Strategy
+To handle complex and scalable pricing logic, I implemented the **Strategy Behavioral Design Pattern**.
+
+**Why Strategy?** Hardcoding pricing rules (like bulk discounts) into the `OrderService` using procedural `if/else` statements violates the Open/Closed Principle. By defining a `PricingStrategy` interface, the system can dynamically switch between a `RegularPricingStrategy` and a `BulkDiscountPricingStrategy` at runtime based on the quantity of items in the user's cart. This allows future sales, tax logic, or seasonal discounts to be added without modifying the core service.
+
+### 📊 UML Class Diagram: Pricing Strategy Pattern
+```mermaid
+classDiagram
+    class PricingStrategy {
+        <<interface>>
+        +calculatePrice(BigDecimal unitPrice, int quantity) BigDecimal
+    }
+
+    class RegularPricingStrategy {
+        +calculatePrice(BigDecimal unitPrice, int quantity) BigDecimal
+    }
+
+    class BulkDiscountPricingStrategy {
+        -double DISCOUNT_RATE
+        -int BULK_THRESHOLD
+        +calculatePrice(BigDecimal unitPrice, int quantity) BigDecimal
+    }
+
+    class OrderServiceImpl {
+        -OrderRepository orderRepository
+        -ProductRepository productRepository
+        +placeOrder(Long productId, int quantity, String username) Order
+        -determineStrategy(int quantity) PricingStrategy
+    }
+
+    PricingStrategy <|.. RegularPricingStrategy : Implements
+    PricingStrategy <|.. BulkDiscountPricingStrategy : Implements
+    OrderServiceImpl --> PricingStrategy : Uses
+```
+
+### 🔁 UML Sequence Diagram: Order Placement Flow
+```mermaid
+sequenceDiagram
+    actor Buyer
+    participant ApiOrderController
+    participant OrderServiceImpl
+    participant PricingStrategy
+    participant OrderRepository
+
+    Buyer->>ApiOrderController: POST /api/orders?productId=1&qty=5
+    ApiOrderController->>OrderServiceImpl: placeOrder(1, 5, "buyer")
+    OrderServiceImpl->>OrderServiceImpl: determineStrategy(5)
+    Note right of OrderServiceImpl: Quantity >= 5 triggers Bulk Strategy
+    OrderServiceImpl->>PricingStrategy: calculatePrice(1000.00, 5)
+    PricingStrategy-->>OrderServiceImpl: return 4500.00 (10% off)
+    OrderServiceImpl->>OrderRepository: save(Order)
+    OrderRepository-->>OrderServiceImpl: Success
+    OrderServiceImpl-->>ApiOrderController: Order Entity
+    ApiOrderController-->>Buyer: 200 OK (JSON Response)
+```
+
+## 🧪 4. Testing & Quality Assurance
+I authored the remaining 50% of the automated testing suite, ensuring the commerce logic and endpoint security rules were completely bulletproof.
+
+### Unit Testing (JUnit 5 & Mockito)
+Authored **10 Unit Tests** focusing on the Commerce layer:
+* **`OrderServiceTest.java` (5 Tests):** Heavily tested the Strategy Pattern to ensure orders below the threshold received regular pricing, while bulk orders accurately applied the 10% discount. Validated that attempting to place an order for a non-existent user threw the correct `RuntimeException`.
+* **`ProductServiceTest.java` (5 Tests):** Verified the successful creation, retrieval, and deletion of products using mocked repository layers.
+
+### Integration Testing (Spring Boot Test & MockMvc)
+Authored **2 Integration Tests** utilizing an in-memory **H2 Database**:
+* Configured to run cleanly with `@Transactional` and `@ActiveProfiles("test")`.
+* **Public Endpoint Test:** Verified that `GET /api/products` successfully returns a 200 OK and a JSON array without requiring any authentication tokens.
+* **Security Redirect Test:** Intentionally fired a request to a protected endpoint (`/api/orders/my-orders`) without an authenticated session. Successfully asserted that Spring Security intercepts the request and issues a `302 Redirection` to the `/login` page, proving the security filter chain restricts unauthorized access as intended.
