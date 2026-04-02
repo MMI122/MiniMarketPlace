@@ -40,23 +40,23 @@ To handle the complex instantiation of different user types (Admin, Buyer, Selle
 ```mermaid
 classDiagram
     class UserRegistrationDto {
-        +String username
-        +String password
-        +String role
+        -String username
+        -String password
+        -String role
     }
     
     class Role {
-        +Long id
-        +RoleName name
+        -Long id
+        -RoleName name
     }
 
     class User {
-        +Long id
-        +String username
-        +String password
-        +Role role
-        +boolean isBanned
-        +String adminMessage
+        -Long id
+        -String username
+        -String password
+        -Role role
+        -boolean isBanned
+        -String adminMessage
     }
 
     class UserFactory {
@@ -163,16 +163,14 @@ classDiagram
     }
 
     class BulkDiscountPricingStrategy {
-        -double DISCOUNT_RATE
-        -int BULK_THRESHOLD
         +calculatePrice(BigDecimal unitPrice, int quantity) BigDecimal
     }
 
     class OrderServiceImpl {
         -OrderRepository orderRepository
         -ProductRepository productRepository
+        -UserRepository userRepository
         +placeOrder(Long productId, int quantity, String username) Order
-        -determineStrategy(int quantity) PricingStrategy
     }
 
     PricingStrategy <|.. RegularPricingStrategy : Implements
