@@ -1,4 +1,4 @@
-# 👥 Project Contributions
+# Project Overview
 
 Our `MiniMarketPlace` project was developed with a strict 50/50 division of labor to ensure both contributors demonstrated a mastery of Spring Boot, API design, architectural patterns, and automated testing. Below is the detailed breakdown of responsibilities and technical implementations.
 
@@ -112,11 +112,6 @@ Authored **2 Integration Tests** utilizing an in-memory **H2 Database**:
 * **Auth Controller Test:** Verified successful 201 HTTP status for user registration, actively bypassing Spring Security's CSRF protection using `.with(csrf())`.
 * **Order Controller Test:** Simulated an authenticated session using `@WithMockUser` to test protected data retrieval.
 
-## ☁️ 5. Cloud Architecture & Deployment
-I was responsible for the transition from local development to production cloud infrastructure.
-* **Database Provisioning:** Provisioned and secured a managed **PostgreSQL 16** instance on Render (Ohio, US East).
-* **Web Service Deployment:** Deployed the Spring Boot application using Docker on Render.
-* **Network Resolution:** Diagnosed and resolved cross-region network errors and JDBC URL formatting issues to successfully link the application layer to the database tier over the public internet using explicit credentials and environment variables.
 
 ---
 ---
