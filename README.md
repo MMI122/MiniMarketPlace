@@ -1,4 +1,4 @@
-# Project Overview
+# 👥 Project Contributions
 
 Our `MiniMarketPlace` project was developed with a strict 50/50 division of labor to ensure both contributors demonstrated a mastery of Spring Boot, API design, architectural patterns, and automated testing. Below is the detailed breakdown of responsibilities and technical implementations.
 
@@ -112,6 +112,147 @@ Authored **2 Integration Tests** utilizing an in-memory **H2 Database**:
 * **Auth Controller Test:** Verified successful 201 HTTP status for user registration, actively bypassing Spring Security's CSRF protection using `.with(csrf())`.
 * **Order Controller Test:** Simulated an authenticated session using `@WithMockUser` to test protected data retrieval.
 
+## ☁️ 5. Cloud Architecture & Deployment
+I was responsible for the transition from local development to production cloud infrastructure.
+* **Database Provisioning:** Provisioned and secured a managed **PostgreSQL 16** instance on Render (Ohio, US East).
+* **Web Service Deployment:** Deployed the Spring Boot application using Docker on Render.
+* **Network Resolution:** Diagnosed and resolved cross-region network errors and JDBC URL formatting issues to successfully link the application layer to the database tier over the public internet using explicit credentials and environment variables.
+
+## 🏛️ 6. System Architecture Diagram
+This flowchart illustrates the structural layers of the application, utilizing color-coding to distinguish between Presentation, Service, Domain, Repository, and Infrastructure components.
+
+```mermaid
+flowchart TB
+    %% --- Styling Definitions ---
+    classDef client fill:#f8fafc,stroke:#64748b,stroke-width:2px,color:#0f172a,stroke-dasharray: 5 5
+    classDef presentation fill:#e0f2fe,stroke:#0284c7,stroke-width:1px,color:#0c4a6e
+    classDef service fill:#dcfce7,stroke:#16a34a,stroke-width:1px,color:#14532d
+    classDef domain fill:#fef3c7,stroke:#d97706,stroke-width:1px,color:#78350f
+    classDef repository fill:#ffedd5,stroke:#ea580c,stroke-width:1px,color:#7c2d12
+    classDef infra fill:#f3e8ff,stroke:#9333ea,stroke-width:1px,color:#581c87
+
+    %% --- Nodes ---
+    U([Client Browser / API Client]):::client
+
+    subgraph PL[Presentation Layer]
+        AC[AuthController]:::presentation
+        PC[ProductController]:::presentation
+        OC[OrderController]:::presentation
+        ADC[AdminController]:::presentation
+        AAC[ApiAuthController]:::presentation
+        APC[ApiProductController]:::presentation
+        AOC[ApiOrderController]:::presentation
+        GEH[GlobalExceptionHandler]:::presentation
+        TV[[Thymeleaf Views\nlogin / register / home / products / add-product / orders / admin-dashboard]]:::presentation
+    end
+
+    subgraph SL[Service Layer]
+        US[UserService + UserServiceImpl]:::service
+        PS[ProductService + ProductServiceImpl]:::service
+        OS[OrderService + OrderServiceImpl]:::service
+        CUDS[CustomUserDetailsService]:::service
+    end
+
+    subgraph DPL[Domain and Patterns]
+        USER[User]:::domain
+        ROLE[Role]:::domain
+        PRODUCT[Product]:::domain
+        ORDER[Order]:::domain
+        DTO[UserRegistrationDto / ProductDto / OrderDto]:::domain
+        UF{UserFactory}:::domain
+        STRAT{PricingStrategy\nRegularPricingStrategy\nBulkDiscountPricingStrategy}:::domain
+    end
+
+    subgraph RL[Repository Layer]
+        UR[(UserRepository)]:::repository
+        RR[(RoleRepository)]:::repository
+        PR[(ProductRepository)]:::repository
+        OR[(OrderRepository)]:::repository
+    end
+
+    subgraph INFRA[Security and Config]
+        SC[SecurityConfig]:::infra
+        DI[DataInitializer]:::infra
+        DB[(PostgreSQL or H2 in tests)]:::infra
+    end
+
+    %% --- Relationships ---
+    
+    %% Client Routing
+    U --> AC
+    U --> PC
+    U --> OC
+    U --> ADC
+    U --> AAC
+    U --> APC
+    U --> AOC
+
+    %% Controllers to Services
+    AC --> US
+    AC --> PS
+    AC --> OS
+    PC --> PS
+    OC --> OS
+    ADC --> US
+    ADC --> PS
+    AAC --> US
+    APC --> PS
+    AOC --> OS
+
+    %% Controllers to Views
+    AC --> TV
+    PC --> TV
+    OC --> TV
+    ADC --> TV
+
+    %% Services to Domain/Patterns
+    US --> UF
+    OS --> STRAT
+
+    %% Services to Repositories
+    US --> UR
+    US --> RR
+    PS --> PR
+    PS --> UR
+    PS --> OR
+    OS --> OR
+    OS --> PR
+    OS --> UR
+    CUDS --> UR
+
+    %% Repositories to Domain Entities
+    UR --> USER
+    RR --> ROLE
+    PR --> PRODUCT
+    OR --> ORDER
+
+    %% Domain Entities to Database
+    USER --> DB
+    ROLE --> DB
+    PRODUCT --> DB
+    ORDER --> DB
+
+    %% Infrastructure Routing
+    SC --> CUDS
+    SC --> AC
+    SC --> PC
+    SC --> OC
+    SC --> ADC
+    SC --> AAC
+    SC --> APC
+    SC --> AOC
+    DI --> RR
+    DI --> UR
+
+    %% Exception Handling
+    GEH -. handles RuntimeException .-> AAC
+    GEH -. handles RuntimeException .-> APC
+    GEH -. handles RuntimeException .-> AOC
+```
+
+### Architecture Notes from Code
+* **Security Routing:** Security role routing is configured in `SecurityConfig` for `/admin/**`, `/seller/**`, and `/buyer/**`, while the active controller mappings are mostly under `/products` and `/orders`.
+* **DTO Flow:** `OrderDto` exists in the DTO package but is minimally used in current controller/service request flow.
 
 ---
 ---
@@ -207,3 +348,51 @@ Authored **2 Integration Tests** utilizing an in-memory **H2 Database**:
 * Configured to run cleanly with `@Transactional` and `@ActiveProfiles("test")`.
 * **Public Endpoint Test:** Verified that `GET /api/products` successfully returns a 200 OK and a JSON array without requiring any authentication tokens.
 * **Security Redirect Test:** Intentionally fired a request to a protected endpoint (`/api/orders/my-orders`) without an authenticated session. Successfully asserted that Spring Security intercepts the request and issues a `302 Redirection` to the `/login` page, proving the security filter chain restricts unauthorized access as intended.
+
+## 🗄️ 5. Entity-Relationship (ER) Diagram
+This model defines the relational database schema utilized by the commerce engine, highlighting primary and foreign key constraints between entities.
+
+```mermaid
+erDiagram
+    ROLE ||--o{ USER : "assigned to"
+    USER ||--o{ PRODUCT : "sells"
+    USER ||--o{ ORDER : "buys"
+    PRODUCT ||--o{ ORDER : "included in"
+
+    ROLE {
+        BIGINT id PK
+        STRING name UK
+    }
+
+    USER {
+        BIGINT id PK
+        STRING username UK
+        STRING password
+        BIGINT role_id FK
+        BOOLEAN is_banned
+        STRING admin_message
+    }
+
+    PRODUCT {
+        BIGINT id PK
+        STRING name
+        STRING description
+        DECIMAL price
+        DATETIME created_at
+        BIGINT seller_id FK
+    }
+
+    ORDER {
+        BIGINT id PK
+        INT quantity
+        DECIMAL total_price
+        DATETIME order_date
+        BIGINT buyer_id FK
+        BIGINT product_id FK
+    }
+```
+
+### Database Mapping Notes from Code
+* **Role Mapping:** `User` has a mandatory `ManyToOne` relation to `Role` using `role_id`.
+* **Product Ownership:** `Product` has a mandatory `ManyToOne` relation to `User` as seller using `seller_id`.
+* **Order Tracking:** `Order` has mandatory `ManyToOne` relations to `User` as buyer and `Product` using `buyer_id` and `product_id`.
